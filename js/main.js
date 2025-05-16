@@ -1,6 +1,6 @@
 let users = JSON.parse(localStorage.getItem('users')) || [
-  { login: 'admin', name: 'Админ Иванов', password: 'admin', role: 'admin' },
-  { login: 'boss', name: 'Алексей Петров', password: 'boss', role: 'chief' },
+  { login: 'admin', name: 'Администратор', password: 'admin', role: 'admin' },
+  { login: 'boss', name: 'Босс Боссов', password: 'boss', role: 'chief' },
   { login: 'ivan', name: 'Иван Иванов', password: '123', role: 'employee' }
 ];
 
@@ -106,8 +106,9 @@ function addUser(e) {
 
   users.push(newUser);
   localStorage.setItem('users', JSON.stringify(users));
+
   e.target.reset();
-  alert('✅ Пользователь добавлен!');
+  alert('✅ Новый пользователь добавлен!');
   renderAllUsers();
 }
 
