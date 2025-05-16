@@ -21,6 +21,7 @@ window.onload = () => {
     document.getElementById('new-password').value = currentUser.password;
     document.getElementById('new-position').value = currentUser.position;
 
+    // Общие настройки для роли
     if (['manager', 'admin'].includes(currentUser.role)) {
       document.getElementById('add-task').classList.remove('hidden');
     }
@@ -84,18 +85,18 @@ function updateProfile(e) {
   }
 
   const index = users.findIndex(u => u.login === currentUser.login);
-  users[index] = currentUser;
+  users[index] = {...currentUser};
 
-  // Обновляем команду у нового менеджера
+  // Если это работник, обновляем его в команде у руководителя
   if (newManager) {
-    const oldManager = users.find(u => u.team.includes(newLogin));
+    const oldManager = users.find(u => u.team?.includes(currentUser.login));
     if (oldManager && oldManager.login !== newManager) {
-      oldManager.team = oldManager.team.filter(login => login !== newLogin);
+      oldManager.team = oldManager.team.filter(login => login !== currentUser.login);
     }
 
     const newManagerObj = users.find(u => u.login === newManager && u.role === 'manager');
-    if (newManagerObj && !newManagerObj.team.includes(newLogin)) {
-      newManagerObj.team.push(newLogin);
+    if (newManagerObj && !newManagerObj.team.includes(currentUser.login)) {
+      newManagerObj.team.push(currentUser.login);
     }
   }
 
@@ -122,7 +123,7 @@ function createTask(e) {
   tasks.push(task);
   localStorage.setItem('tasks', JSON.stringify(tasks));
 
-  // Добавляем уведомления
+  // Добавляем уведомления всем исполнителям
   assignees.forEach(login => {
     const user = users.find(u => u.login === login);
     if (user) {
@@ -239,7 +240,6 @@ function showUserTasks(login) {
     });
   }
 
-  container.innerHTML = `<h4>Задачи для ${login}</h4>`;
   container.appendChild(ul);
 }
 
@@ -269,14 +269,19 @@ function addUser(e) {
 
   if (role === 'user' && manager) {
     newUser.manager = manager;
-    const managerUser = users.find(u => u.login === manager && u.role === 'manager');
-    if (managerUser) {
-      if (!managerUser.team) managerUser.team = [];
-      managerUser.team.push(newUser.login);
-    }
   }
 
   users.push(newUser);
+
+  // Обновляем список подчинённых у руководителя
+  if (manager) {
+    const managerUser = users.find(u => u.login === manager && u.role === 'manager');
+    if (managerUser) {
+      if (!managerUser.team) managerUser.team = [];
+      managerUser.team.push(login);
+    }
+  }
+
   localStorage.setItem('users', JSON.stringify(users));
   alert('Пользователь добавлен!');
   e.target.reset();
@@ -345,7 +350,6 @@ function renderTasksForManagerTeam() {
     list.appendChild(h5);
 
     const ul = document.createElement('ul');
-
     if (userTasks.length === 0) {
       const li = document.createElement('li');
       li.textContent = 'Нет задач';
