@@ -1,6 +1,6 @@
 let users = JSON.parse(localStorage.getItem('users')) || [
-  { login: 'admin', name: 'Администратор', password: 'admin', role: 'admin' },
-  { login: 'boss', name: 'Босс Боссов', password: 'boss', role: 'chief' },
+  { login: 'admin', name: 'Админ Иванов', password: 'admin', role: 'admin' },
+  { login: 'boss', name: 'Алексей Петров', password: 'boss', role: 'chief' },
   { login: 'ivan', name: 'Иван Иванов', password: '123', role: 'employee' }
 ];
 
@@ -59,6 +59,11 @@ function updateProfile(e) {
   const newLogin = document.getElementById('new-login').value.trim();
   const newPassword = document.getElementById('new-password').value.trim();
 
+  if (!newName || !newLogin || !newPassword) {
+    alert('Заполните все поля');
+    return;
+  }
+
   // Обновляем текущего пользователя
   currentUser.name = newName;
   currentUser.position = newPosition;
@@ -86,18 +91,23 @@ function addUser(e) {
     return;
   }
 
-  // Проверка на уникальность логина
   if (users.some(u => u.login === login)) {
     alert('Пользователь с таким логином уже существует');
     return;
   }
 
-  // Добавляем нового пользователя
-  const newUser = { login, name, position, password, role };
+  const newUser = {
+    login,
+    name,
+    position,
+    password,
+    role
+  };
+
   users.push(newUser);
   localStorage.setItem('users', JSON.stringify(users));
   e.target.reset();
-  alert('✅ Новый пользователь добавлен');
+  alert('✅ Пользователь добавлен!');
   renderAllUsers();
 }
 
@@ -107,13 +117,7 @@ function renderAllUsers() {
 
   users.forEach((user, index) => {
     const li = document.createElement('li');
-    li.innerHTML = `
-      <strong>${user.name}</strong><br/>
-      Логин: ${user.login}<br/>
-      Пароль: ${user.password}<br/>
-      Роль: ${user.role}<br/>
-      <hr/>
-    `;
+    li.textContent = `${user.name} (${user.login}) — ${user.role}`;
     list.appendChild(li);
   });
 }
