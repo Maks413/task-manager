@@ -37,49 +37,26 @@
         </form>
       </section>
 
-      <!-- Мои задачи -->
-      <section id="tasks" class="panel-section">
-        <h3>Мои задачи</h3>
-        <ul id="task-list"></ul>
-      </section>
-
-      <!-- Уведомления -->
-      <section id="notifications" class="panel-section">
-        <h3>Уведомления</h3>
-        <ul id="notification-list"></ul>
-      </section>
-
-      <!-- Сотрудники начальника -->
-      <section id="manager-team" class="panel-section hidden">
-        <h3>Моя команда</h3>
-        <ul id="team-list"></ul>
-
-        <h3 class="mt-6">Задачи команды</h3>
-        <ul id="team-tasks"></ul>
-      </section>
-
       <!-- Панель админа -->
       <section id="admin-panel" class="panel-section hidden">
         <h3>Добавить нового пользователя</h3>
         <form onsubmit="addUser(event)">
-          <input type="text" id="user-login" placeholder="Логин" required />
-          <input type="text" id="user-name" placeholder="Имя Отчество Фамилия" required />
+          <input type="text" id="user-login" placeholder="Логин нового" required />
+          <input type="text" id="user-name" placeholder="Имя нового" required />
           <input type="text" id="user-position" placeholder="Должность" required />
           <input type="password" id="user-password" placeholder="Пароль" required />
 
-          <select id="user-role" onchange="toggleChiefField(this.value)" required>
+          <select id="user-role" required>
             <option value="">Выберите роль</option>
             <option value="employee">Сотрудник</option>
             <option value="chief">Начальник</option>
             <option value="admin">Администратор</option>
           </select>
 
-          <select id="user-chief" class="hidden"></select>
-
-          <button type="submit">Добавить пользователя</button>
+          <button type="submit">Зарегистрировать</button>
         </form>
 
-        <h4 class="mt-6">Список всех пользователей</h4>
+        <h4 class="mt-6">Список пользователей</h4>
         <ul id="user-list"></ul>
       </section>
     </div>
