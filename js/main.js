@@ -1,21 +1,13 @@
-// Пользователи
-let users = [
+let users = JSON.parse(localStorage.getItem('users')) || [
   { login: 'admin', name: 'Админ Иванов', position: 'Администратор', password: 'admin', role: 'admin' },
   { login: 'ivan', name: 'Иван Петров', position: 'Фронтенд разработчик', password: '123', role: 'user' },
   { login: 'maria', name: 'Мария Смирнова', position: 'UI/UX дизайнер', password: '456', role: 'manager' }
 ];
 
-// Задачи
-let tasks = [
-  { id: 1, title: 'Сделать макет сайта', from: 'maria', to: 'ivan', deadline: '2025-05-20' },
-  { id: 2, title: 'Сверстать главную страницу', from: 'maria', to: 'ivan', deadline: '2025-05-25' },
-  { id: 3, title: 'Обновить дизайн', from: 'admin', to: 'maria', deadline: '2025-05-22' }
-];
+let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 
-// Текущий пользователь
 let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
 
-// При загрузке страницы
 window.onload = () => {
   renderUsersToAssignee();
 
@@ -43,7 +35,6 @@ window.onload = () => {
   }
 };
 
-// Вход
 function handleLogin(e) {
   e.preventDefault();
   const login = document.getElementById('username').value.trim();
@@ -56,17 +47,16 @@ function handleLogin(e) {
     return;
   }
 
-  localStorage.setItem('currentUser', JSON.stringify(user));
+  currentUser = user;
+  localStorage.setItem('currentUser', JSON.stringify(currentUser));
   window.location.reload();
 }
 
-// Выход
 function logout() {
   localStorage.removeItem('currentUser');
   window.location.reload();
 }
 
-// Обновление профиля
 function updateProfile(e) {
   e.preventDefault();
   const newLogin = document.getElementById('new-login').value.trim();
@@ -74,18 +64,21 @@ function updateProfile(e) {
   const newPosition = document.getElementById('new-position').value.trim();
   const newPassword = document.getElementById('new-password').value.trim();
 
+  // Обновляем текущего пользователя
   currentUser.login = newLogin;
   currentUser.name = newName;
   currentUser.position = newPosition;
   currentUser.password = newPassword;
 
-  const userIndex = users.findIndex(u => u.login === currentUser.login);
-  users[userIndex] = currentUser;
+  // Обновляем в списке пользователей
+  const index = users.findIndex(u => u.login === currentUser.login);
+  users[index] = currentUser;
+  localStorage.setItem('users', JSON.stringify(users));
   localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
   alert('Данные обновлены!');
 }
 
-// Добавление задачи
 function createTask(e) {
   e.preventDefault();
   const title = document.getElementById('task-title').value.trim();
@@ -101,11 +94,13 @@ function createTask(e) {
   };
 
   tasks.push(task);
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+
   renderUserTasks();
-  alert('Задача назначена!');
+  alert('Задача создана!');
+  e.target.reset();
 }
 
-// Отображение своих задач
 function renderUserTasks() {
   const list = document.getElementById('task-list');
   list.innerHTML = '';
@@ -124,27 +119,12 @@ function renderUserTasks() {
     li.innerHTML = `
       <strong>${task.title}</strong><br/>
       От: ${task.from}<br/>
-      Срок: ${task.deadline}<br/>
+      Срок: ${task.deadline}
     `;
     list.appendChild(li);
   });
 }
 
-// Для админа: отобразить всех пользователей
-function renderAllUsers() {
-  const list = document.getElementById('user-list');
-  list.innerHTML = '';
-  users.forEach(user => {
-    const li = document.createElement('li');
-    li.innerHTML = `
-      ${user.name} — ${user.position} (<em>${user.role}</em>)<br/>
-      Логин: ${user.login}, Пароль: ${user.password}
-    `;
-    list.appendChild(li);
-  });
-}
-
-// Для админа: все задачи
 function renderAllTasksForAdmin() {
   const list = document.getElementById('task-list');
   list.innerHTML = '';
@@ -155,15 +135,52 @@ function renderAllTasksForAdmin() {
   });
 }
 
-// Для формы: список доступных исполнителей
+function addUser(e) {
+  e.preventDefault();
+  const login = document.getElementById('user-login').value.trim();
+  const name = document.getElementById('user-name').value.trim();
+  const position = document.getElementById('user-position').value.trim();
+  const password = document.getElementById('user-password').value.trim();
+  const role = document.getElementById('user-role').value;
+
+  const exists = users.some(u => u.login === login);
+  if (exists) {
+    alert('Пользователь с таким логином уже существует');
+    return;
+  }
+
+  const newUser = { login, name, position, password, role };
+  users.push(newUser);
+  localStorage.setItem('users', JSON.stringify(users));
+  alert('Пользователь добавлен!');
+  renderUsersToAssignee();
+  renderAllUsers();
+}
+
 function renderUsersToAssignee() {
   const datalist = document.getElementById('users');
   datalist.innerHTML = '';
   users.forEach(user => {
-    if (user.role !== 'manager') return;
+    if (user.role !== 'admin' && user.role !== 'manager') return;
 
     const option = document.createElement('option');
     option.value = user.login;
     datalist.appendChild(option);
+  });
+}
+
+function renderAllUsers() {
+  const list = document.getElementById('user-list');
+  list.innerHTML = '';
+  users.forEach(user => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <strong>${user.name}</strong><br/>
+      Логин: ${user.login}<br/>
+      Пароль: ${user.password}<br/>
+      Должность: ${user.position}<br/>
+      Роль: ${user.role}
+    `;
+    list.appendChild(li);
   });
 }

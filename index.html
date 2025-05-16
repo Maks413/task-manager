@@ -7,78 +7,74 @@
 </head>
 <body>
 
-  <main id="app">
-    <!-- Форма входа -->
-    <div id="login-form">
-      <h1>Система управления проектами</h1>
-      <form id="login" onsubmit="handleLogin(event)">
-        <input type="text" id="username" placeholder="Логин" required />
-        <input type="password" id="password" placeholder="Пароль" required />
-        <button type="submit">Войти</button>
+  <!-- Форма входа -->
+  <div id="login-form">
+    <h1>Система управления проектами</h1>
+    <form onsubmit="handleLogin(event)">
+      <input type="text" id="username" placeholder="Логин" required />
+      <input type="password" id="password" placeholder="Пароль" required />
+      <button type="submit">Войти</button>
+    </form>
+  </div>
+
+  <!-- Личный кабинет -->
+  <div id="user-panel" class="hidden">
+    <div class="header">
+      <h2>Привет, <span id="user-name"></span>!</h2>
+      <button onclick="logout()">Выйти</button>
+    </div>
+
+    <!-- Профиль -->
+    <section id="profile" class="panel-section">
+      <h3>Мой профиль</h3>
+      <form onsubmit="updateProfile(event)">
+        <input type="text" id="new-name" placeholder="Имя и фамилия" required />
+        <input type="text" id="new-position" placeholder="Должность" required />
+        <input type="text" id="new-login" placeholder="Новый логин" required />
+        <input type="password" id="new-password" placeholder="Новый пароль" required />
+        <button type="submit">Сохранить изменения</button>
       </form>
-    </div>
+    </section>
 
-    <!-- Личный кабинет -->
-    <div id="user-panel" class="hidden">
-      <div class="header">
-        <h2>Привет, <span id="user-name"></span>!</h2>
-        <button onclick="logout()">Выйти</button>
-      </div>
+    <!-- Мои задачи -->
+    <section id="tasks" class="panel-section">
+      <h3>Мои задачи</h3>
+      <ul id="task-list"></ul>
+    </section>
 
-      <!-- Профиль пользователя -->
-      <section id="profile" class="panel-section">
-        <h3>Мой профиль</h3>
-        <form id="profile-form" onsubmit="updateProfile(event)">
-          <input type="text" id="new-name" placeholder="Имя и фамилия" required />
-          <input type="text" id="new-position" placeholder="Должность" required />
-          <input type="text" id="new-login" placeholder="Новый логин" required />
-          <input type="password" id="new-password" placeholder="Новый пароль" required />
-          <button type="submit">Сохранить изменения</button>
-        </form>
-      </section>
+    <!-- Для руководителя: форма назначения задач -->
+    <section id="add-task" class="panel-section hidden">
+      <h3>Добавить задачу</h3>
+      <form onsubmit="createTask(event)">
+        <input type="text" id="task-title" placeholder="Описание задачи" required />
+        <input type="text" id="assignee" list="users" placeholder="Кому поставить задачу" required />
+        <input type="date" id="deadline" required />
+        <button type="submit">Создать задачу</button>
+      </form>
+    </section>
 
-      <!-- Список задач -->
-      <section id="tasks" class="panel-section">
-        <h3>Мои задачи</h3>
-        <ul id="task-list"></ul>
-      </section>
+    <!-- Для администратора: список всех пользователей -->
+    <section id="admin-panel" class="panel-section hidden">
+      <h3>Добавить нового пользователя</h3>
+      <form onsubmit="addUser(event)">
+        <input type="text" id="user-login" placeholder="Логин" required />
+        <input type="text" id="user-name" placeholder="Имя и фамилия" required />
+        <input type="text" id="user-position" placeholder="Должность" required />
+        <input type="password" id="user-password" placeholder="Пароль" required />
+        <select id="user-role">
+          <option value="user">Работник</option>
+          <option value="manager">Менеджер</option>
+          <option value="admin">Администратор</option>
+        </select>
+        <button type="submit">Добавить пользователя</button>
+      </form>
 
-      <!-- Для руководителя: форма добавления задач -->
-      <section id="add-task" class="panel-section hidden">
-        <h3>Добавить задачу</h3>
-        <form onsubmit="createTask(event)">
-          <input type="text" id="task-title" placeholder="Описание задачи" required />
-          <input type="text" id="assignee" list="users" placeholder="Кому поставить задачу" required />
-          <input type="date" id="deadline" required />
-          <button type="submit">Создать задачу</button>
-        </form>
-      </section>
+      <h4 class="mt-6">Список пользователей</h4>
+      <ul id="user-list"></ul>
+    </section>
+  </div>
 
-      <!-- Для администратора: добавление пользователей -->
-      <section id="admin-panel" class="panel-section hidden">
-        <h3>Добавить нового пользователя</h3>
-        <form onsubmit="addUser(event)">
-          <input type="text" id="user-login" placeholder="Логин" required />
-          <input type="text" id="user-name" placeholder="Имя и фамилия" required />
-          <input type="text" id="user-position" placeholder="Должность" required />
-          <input type="password" id="user-password" placeholder="Пароль" required />
-          <select id="user-role">
-            <option value="user">Работник</option>
-            <option value="manager">Менеджер</option>
-            <option value="admin">Администратор</option>
-          </script>
-          <button type="submit">Добавить пользователя</button>
-        </form>
-
-        <h3 class="mt-6">Список пользователей</h3>
-        <ul id="user-list"></ul>
-      </section>
-    </div>
-  </main>
-
-  <datalist id="users">
-    <!-- Здесь будут имена пользователей -->
-  </datalist>
+  <datalist id="users"></datalist>
 
   <script src="js/main.js"></script>
 </body>
