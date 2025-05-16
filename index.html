@@ -25,16 +25,15 @@
     </div>
 
     <!-- Профиль -->
-    <section id="profile" class="panel-section">
-      <h3>Мой профиль</h3>
-      <form onsubmit="updateProfile(event)">
-        <input type="text" id="new-name" placeholder="Имя и фамилия" required />
-        <input type="text" id="new-position" placeholder="Должность" required />
-        <input type="text" id="new-login" placeholder="Новый логин" required />
-        <input type="password" id="new-password" placeholder="Новый пароль" required />
-        <button type="submit">Сохранить изменения</button>
-      </form>
-    </section>
+<section id="add-task" class="panel-section hidden">
+  <h3>Добавить задачу</h3>
+  <form onsubmit="createTask(event)">
+    <input type="text" id="task-title" placeholder="Описание задачи" required />
+    <input type="text" id="assignee" placeholder="Кому (логины через запятую)" required />
+    <input type="date" id="deadline" required />
+    <button type="submit">Создать задачу</button>
+  </form>
+</section>
 
     <!-- Мои задачи -->
     <section id="tasks" class="panel-section">
