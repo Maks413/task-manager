@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Система управления проектами</title>
+  <title>Система управления задачами</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -25,12 +25,6 @@
         <button onclick="logout()">Выйти</button>
       </div>
 
-      <!-- Уведомления -->
-      <section id="notifications" class="panel-section">
-        <h3>Уведомления</h3>
-        <ul id="notification-list"></ul>
-      </section>
-
       <!-- Профиль пользователя -->
       <section id="profile" class="panel-section">
         <h3>Мой профиль</h3>
@@ -50,13 +44,10 @@
         <ul id="task-list"></ul>
       </section>
 
-      <!-- Руководитель: команда -->
-      <section id="manager-team" class="panel-section hidden">
-        <h3>Моя команда</h3>
-        <ul id="team-list"></ul>
-
-        <h3 class="mt-6">Задачи команды</h3>
-        <ul id="team-tasks"></ul>
+      <!-- Уведомления -->
+      <section id="notifications" class="panel-section">
+        <h3>Уведомления</h3>
+        <ul id="notification-list"></ul>
       </section>
 
       <!-- Добавление задачи -->
@@ -69,6 +60,15 @@
           <datalist id="users"></datalist>
           <button type="submit">Создать задачу</button>
         </form>
+      </section>
+
+      <!-- Команда менеджера -->
+      <section id="manager-team" class="panel-section hidden">
+        <h3>Моя команда</h3>
+        <ul id="team-list"></ul>
+
+        <h3 class="mt-6">Задачи команды</h3>
+        <ul id="team-tasks"></ul>
       </section>
 
       <!-- Админка -->
