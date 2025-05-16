@@ -1,18 +1,16 @@
 let users = JSON.parse(localStorage.getItem('users')) || [
   { login: 'admin', name: 'Админ Иванов', password: 'admin', role: 'admin' },
-  { login: 'boss', name: 'Алексей Петров', password: 'boss', role: 'chief', team: ['ivan'], notifications: [] },
+  { login: 'boss', name: 'Алексей Петров', password: 'boss', role: 'chief', team: ['ivan'] },
   { login: 'ivan', name: 'Иван Петров', password: '123', role: 'employee', chief: 'boss', notifications: [] }
 ];
 
 let tasks = JSON.parse(localStorage.getItem('tasks')) || [
-  { id: Date.now(), title: 'Сделать отчет', from: 'boss', to: 'ivan', status: 'ожидает', deadline: '2025-05-20' }
+  { id: Date.now(), title: 'Сделать макет сайта', from: 'boss', to: 'ivan', status: 'ожидает', deadline: '2025-05-20' }
 ];
 
 let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
 
 window.onload = () => {
-  renderUsersForChiefSelect();
-
   if (currentUser) {
     document.getElementById('login-form').classList.add('hidden');
     document.getElementById('user-panel').classList.remove('hidden');
@@ -23,7 +21,7 @@ window.onload = () => {
     document.getElementById('new-login').value = currentUser.login;
     document.getElementById('new-password').value = currentUser.password;
 
-    // Показываем только нужные секции
+    // Роли
     if (currentUser.role === 'admin') {
       document.getElementById('admin-panel').classList.remove('hidden');
       renderAllUsers();
@@ -38,6 +36,8 @@ window.onload = () => {
     renderUserTasks();
     renderNotifications();
   }
+
+  renderUsersForChiefSelect(); // для формы добавления
 };
 
 function handleLogin(e) {
@@ -74,12 +74,11 @@ function updateProfile(e) {
   currentUser.position = newPosition;
   currentUser.password = newPassword;
 
-  // Обновляем данные в общем массиве
   const index = users.findIndex(u => u.login === currentUser.login);
   users[index] = currentUser;
   localStorage.setItem('users', JSON.stringify(users));
 
-  alert('Данные обновлены!');
+  alert('Профиль обновлён!');
 }
 
 function createTask(e) {
@@ -100,7 +99,6 @@ function createTask(e) {
   tasks.push(task);
   localStorage.setItem('tasks', JSON.stringify(tasks));
 
-  // Добавляем уведомление исполнителю
   const user = users.find(u => u.login === assignee);
   if (user) {
     user.notifications.push(`Вам назначена задача: "${title}"`);
@@ -113,10 +111,71 @@ function createTask(e) {
   if (currentUser.role === 'admin') renderAllTasksForAdmin();
 }
 
+function addUser(e) {
+  e.preventDefault();
+  const login = document.getElementById('user-login').value.trim();
+  const name = document.getElementById('user-name').value.trim();
+  const position = document.getElementById('user-position').value.trim();
+  const password = document.getElementById('user-password').value.trim();
+  const role = document.getElementById('user-role').value;
+  const chief = document.getElementById('user-chief').value;
+
+  // Проверка на дубликат
+  if (users.some(u => u.login === login)) {
+    alert('Пользователь с таким логином уже существует');
+    return;
+  }
+
+  const newUser = {
+    login,
+    name,
+    position,
+    password,
+    role,
+    chief: role === 'employee' ? chief : '',
+    team: role === 'chief' || role === 'admin' ? [] : undefined,
+    notifications: []
+  };
+
+  users.push(newUser);
+  localStorage.setItem('users', JSON.stringify(users));
+
+  // Если это сотрудник — добавляем его в команду начальника
+  if (role === 'employee' && chief) {
+    const chiefUser = users.find(u => u.login === chief && u.role === 'chief');
+    if (chiefUser) {
+      if (!chiefUser.team) chiefUser.team = [];
+      chiefUser.team.push(login);
+      localStorage.setItem('users', JSON.stringify(users));
+    }
+  }
+
+  alert('Пользователь добавлен!');
+  e.target.reset();
+  renderAllUsers();
+  renderUsersForChiefSelect();
+}
+
+function renderAllUsers() {
+  const list = document.getElementById('user-list');
+  list.innerHTML = '';
+
+  users.forEach(user => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <strong>${user.name}</strong><br/>
+      Логин: ${user.login}<br/>
+      Пароль: ${user.password}<br/>
+      Роль: ${user.role === 'admin' ? 'Администратор' : user.role === 'chief' ? 'Начальник' : 'Сотрудник'}<br/>
+      Начальник: ${user.chief || 'нет'}
+    `;
+    list.appendChild(li);
+  });
+}
+
 function renderUserTasks() {
   const list = document.getElementById('task-list');
   list.innerHTML = '';
-
   const filtered = tasks.filter(task => task.to === currentUser.login);
 
   if (filtered.length === 0) {
@@ -148,97 +207,39 @@ function updateTaskStatus(taskId, newStatus) {
   if (task) {
     task.status = newStatus;
     localStorage.setItem('tasks', JSON.stringify(tasks));
-
-    // Если это сотрудник → обновляем для начальника
-    if (currentUser.role === 'employee') {
-      const chief = users.find(u => u.login === currentUser.chief);
-      if (chief) {
-        chief.notifications.push(`${currentUser.name} изменил статус задачи на "${newStatus}"`);
-        localStorage.setItem('users', JSON.stringify(users));
-      }
-    }
-
     renderUserTasks();
     if (currentUser.role === 'chief') renderTasksForManagerTeam();
     if (currentUser.role === 'admin') renderAllTasksForAdmin();
   }
 }
 
-function addUser(e) {
-  e.preventDefault();
-  const login = document.getElementById('user-login').value.trim();
-  const name = document.getElementById('user-name').value.trim();
-  const position = document.getElementById('user-position').value.trim();
-  const password = document.getElementById('user-password').value.trim();
-  const role = document.getElementById('user-role').value;
-  const chief = document.getElementById('user-chief').value;
+function renderNotifications() {
+  const list = document.getElementById('notification-list');
+  list.innerHTML = '';
+  const user = users.find(u => u.login === currentUser.login);
 
-  if (users.some(u => u.login === login)) {
-    alert('Пользователь с таким логином уже существует');
+  if (!user.notifications || user.notifications.length === 0) {
+    const li = document.createElement('li');
+    li.textContent = 'Нет уведомлений';
+    list.appendChild(li);
     return;
   }
 
-  const newUser = {
-    login,
-    name,
-    position,
-    password,
-    role,
-    chief: '',
-    notifications: [],
-    team: []
-  };
-
-  if (role === 'employee' && chief) {
-    newUser.chief = chief;
-    const chiefUser = users.find(u => u.login === chief && u.role === 'chief');
-    if (chiefUser) {
-      if (!chiefUser.team) chiefUser.team = [];
-      chiefUser.team.push(login);
-    }
-  }
-
-  users.push(newUser);
-  localStorage.setItem('users', JSON.stringify(users));
-  alert('Пользователь добавлен!');
-  e.target.reset();
-  renderUsersForChiefSelect();
-  renderAllUsers();
-}
-
-function renderUsersForChiefSelect() {
-  const select = document.getElementById('user-chief');
-  select.classList.toggle('hidden', document.getElementById('user-role').value !== 'employee');
-
-  select.innerHTML = '';
-  const chiefs = users.filter(u => u.role === 'chief' || u.role === 'admin');
-  chiefs.forEach(chief => {
-    const option = document.createElement('option');
-    option.value = chief.login;
-    option.textContent = chief.name;
-    select.appendChild(option);
-  });
-}
-
-function renderAllUsers() {
-  const list = document.getElementById('user-list');
-  list.innerHTML = '';
-  users.forEach(user => {
+  user.notifications.forEach(msg => {
     const li = document.createElement('li');
-    li.innerHTML = `
-      <strong>${user.name}</strong><br/>
-      Логин: ${user.login}<br/>
-      Пароль: ${user.password}<br/>
-      Роль: ${user.role === 'admin' ? 'Администратор' : user.role === 'chief' ? 'Начальник' : 'Сотрудник'}
-    `;
+    li.textContent = msg;
     list.appendChild(li);
   });
+
+  user.notifications = [];
+  localStorage.setItem('users', JSON.stringify(users));
 }
 
 function renderManagerTeam() {
   const list = document.getElementById('team-list');
   list.innerHTML = '';
   const chief = users.find(u => u.login === currentUser.login);
+
   if (!chief.team || chief.team.length === 0) {
     const li = document.createElement('li');
     li.textContent = 'Нет сотрудников в команде';
@@ -288,8 +289,8 @@ function showUserTasks(login) {
 function renderTasksForManagerTeam() {
   const list = document.getElementById('team-tasks');
   list.innerHTML = '';
-
   const chief = users.find(u => u.login === currentUser.login);
+
   if (!chief.team || chief.team.length === 0) {
     const li = document.createElement('li');
     li.textContent = 'Нет команды';
@@ -302,7 +303,7 @@ function renderTasksForManagerTeam() {
     const userTasks = tasks.filter(task => task.to === login);
 
     const h5 = document.createElement('h4');
-    h5.textContent = `Задачи ${user.name}`;
+    h5.textContent = `Задачи: ${user.name}`;
     list.appendChild(h5);
 
     const ul = document.createElement('ul');
@@ -316,7 +317,7 @@ function renderTasksForManagerTeam() {
         const li = document.createElement('li');
         li.innerHTML = `
           <strong>${task.title}</strong><br/>
-          Статус: 
+          Статус: ${task.status}
           <select onchange="updateTaskStatus(${task.id}, this.value)">
             <option value="ожидает" ${task.status === 'ожидает' ? 'selected' : ''}>Ожидает</option>
             <option value="в работе" ${task.status === 'в работе' ? 'selected' : ''}>В работе</option>
@@ -331,57 +332,6 @@ function renderTasksForManagerTeam() {
   });
 }
 
-function renderUserTasks() {
-  const list = document.getElementById('task-list');
-  list.innerHTML = '';
-  const filtered = tasks.filter(task => task.to === currentUser.login);
-
-  if (filtered.length === 0) {
-    const li = document.createElement('li');
-    li.textContent = 'Нет активных задач';
-    list.appendChild(li);
-    return;
-  }
-
-  filtered.forEach(task => {
-    const li = document.createElement('li');
-    li.innerHTML = `
-      <strong>${task.title}</strong><br/>
-      От: ${task.from}<br/>
-      Срок: ${task.deadline}<br/>
-      Статус: 
-      <select onchange="updateTaskStatus(${task.id}, this.value)">
-        <option value="ожидает" ${task.status === 'ожидает' ? 'selected' : ''}>Ожидает</option>
-        <option value="в работе" ${task.status === 'в работе' ? 'selected' : ''}>В работе</option>
-        <option value="выполнено" ${task.status === 'выполнено' ? 'selected' : ''}>Выполнено</option>
-      </select>
-    `;
-    list.appendChild(li);
-  });
-}
-
-function renderNotifications() {
-  const list = document.getElementById('notification-list');
-  list.innerHTML = '';
-  const user = users.find(u => u.login === currentUser.login);
-
-  if (!user.notifications || user.notifications.length === 0) {
-    const li = document.createElement('li');
-    li.textContent = 'Нет уведомлений';
-    list.appendChild(li);
-    return;
-  }
-
-  user.notifications.forEach(msg => {
-    const li = document.createElement('li');
-    li.textContent = msg;
-    list.appendChild(li);
-  });
-
-  user.notifications = [];
-  localStorage.setItem('users', JSON.stringify(users));
-}
-
 function renderAllTasksForAdmin() {
   const list = document.getElementById('task-list');
   list.innerHTML = '';
@@ -390,8 +340,33 @@ function renderAllTasksForAdmin() {
     li.innerHTML = `
       <strong>${task.title}</strong><br/>
       Кому: ${task.to}<br/>
+      Срок: ${task.deadline}<br/>
       Статус: ${task.status}
     `;
     list.appendChild(li);
+  });
+}
+
+function toggleChiefField(role) {
+  const select = document.getElementById('user-chief');
+  select.classList.toggle('hidden', role !== 'employee');
+
+  select.innerHTML = '<option value="">Выберите начальника</option>';
+  const chiefs = users.filter(u => u.role === 'chief');
+  chiefs.forEach(chief => {
+    const option = document.createElement('option');
+    option.value = chief.login;
+    option.textContent = chief.name;
+    select.appendChild(option);
+  });
+}
+
+function renderUsersForChiefSelect() {
+  const datalist = document.getElementById('users');
+  datalist.innerHTML = '';
+  users.forEach(user => {
+    const option = document.createElement('option');
+    option.value = user.login;
+    datalist.appendChild(option);
   });
 }
