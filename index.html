@@ -25,6 +25,12 @@
         <button onclick="logout()">Выйти</button>
       </div>
 
+      <!-- Уведомления -->
+      <section id="notifications" class="panel-section">
+        <h3>Уведомления</h3>
+        <ul id="notification-list"></ul>
+      </section>
+
       <!-- Профиль пользователя -->
       <section id="profile" class="panel-section">
         <h3>Мой профиль</h3>
@@ -33,6 +39,7 @@
           <input type="text" id="new-position" placeholder="Должность" required />
           <input type="text" id="new-login" placeholder="Новый логин" required />
           <input type="password" id="new-password" placeholder="Новый пароль" required />
+          <select id="manager-select" class="hidden"></select>
           <button type="submit">Сохранить изменения</button>
         </form>
       </section>
@@ -43,10 +50,13 @@
         <ul id="task-list"></ul>
       </section>
 
-      <!-- Команда руководителя -->
+      <!-- Руководитель: команда -->
       <section id="manager-team" class="panel-section hidden">
         <h3>Моя команда</h3>
         <ul id="team-list"></ul>
+
+        <h3 class="mt-6">Задачи команды</h3>
+        <ul id="team-tasks"></ul>
       </section>
 
       <!-- Добавление задачи -->
@@ -74,8 +84,9 @@
             <option value="manager">Менеджер</option>
             <option value="admin">Администратор</option>
           </select>
-          <select id="user-manager" multiple size="3">
-            <!-- Сюда добавятся менеджеры -->
+          <select id="user-manager" class="hidden">
+            <option value="">Выберите менеджера</option>
+            <!-- Заполняется динамически -->
           </select>
           <button type="submit">Добавить пользователя</button>
         </form>
