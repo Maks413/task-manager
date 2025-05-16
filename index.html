@@ -39,7 +39,7 @@
           <input type="text" id="new-position" placeholder="Должность" required />
           <input type="text" id="new-login" placeholder="Новый логин" required />
           <input type="password" id="new-password" placeholder="Новый пароль" required />
-          <select id="manager-select" class="hidden"></select>
+          <select id="user-manager" class="hidden"></select>
           <button type="submit">Сохранить изменения</button>
         </form>
       </section>
@@ -79,15 +79,12 @@
           <input type="text" id="user-name" placeholder="Имя и фамилия" required />
           <input type="text" id="user-position" placeholder="Должность" required />
           <input type="password" id="user-password" placeholder="Пароль" required />
-          <select id="user-role">
+          <select id="user-role" onchange="toggleManagerField(this.value)">
             <option value="user">Работник</option>
             <option value="manager">Менеджер</option>
             <option value="admin">Администратор</option>
           </select>
-          <select id="user-manager" class="hidden">
-            <option value="">Выберите менеджера</option>
-            <!-- Заполняется динамически -->
-          </select>
+          <select id="user-manager" class="hidden"></select>
           <button type="submit">Добавить пользователя</button>
         </form>
 

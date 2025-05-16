@@ -1,12 +1,10 @@
 let users = JSON.parse(localStorage.getItem('users')) || [
   { login: 'admin', name: 'Админ Иванов', position: 'Администратор', password: 'admin', role: 'admin' },
-  { login: 'ivan', name: 'Иван Петров', position: 'Фронтенд разработчик', password: '123', role: 'user', manager: 'maria', notifications: [] },
-  { login: 'maria', name: 'Мария Смирнова', position: 'UI/UX дизайнер', password: '456', role: 'manager', team: ['ivan'] }
+  { login: 'ivan', name: 'Иван Петров', position: 'Фронтенд разработчик', password: '123', role: 'user', manager: '', notifications: [] },
+  { login: 'maria', name: 'Мария Смирнова', position: 'UI/UX дизайнер', password: '456', role: 'manager', team: [], notifications: [] }
 ];
 
-let tasks = JSON.parse(localStorage.getItem('tasks')) || [
-  { id: 1, title: 'Сделать макет сайта', from: 'maria', to: ['ivan'], status: 'ожидает', deadline: '2025-05-20' }
-];
+let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 
 let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
 
@@ -23,13 +21,13 @@ window.onload = () => {
     document.getElementById('new-password').value = currentUser.password;
     document.getElementById('new-position').value = currentUser.position;
 
-    // Показываем только нужные секции
     if (['manager', 'admin'].includes(currentUser.role)) {
       document.getElementById('add-task').classList.remove('hidden');
     }
 
     if (currentUser.role === 'admin') {
       document.getElementById('admin-panel').classList.remove('hidden');
+      toggleManagerField(document.getElementById('user-role').value);
       renderAllUsers();
       renderAllTasksForAdmin();
     }
@@ -40,8 +38,8 @@ window.onload = () => {
       renderTasksForManagerTeam();
     }
 
-    renderNotifications();
     renderUserTasks();
+    renderNotifications();
   }
 };
 
@@ -75,16 +73,29 @@ function updateProfile(e) {
   const newPassword = document.getElementById('new-password').value.trim();
   const newManager = document.getElementById('user-manager').value;
 
+  // Обновляем текущего пользователя
   currentUser.login = newLogin;
   currentUser.name = newName;
   currentUser.position = newPosition;
   currentUser.password = newPassword;
-  if (currentUser.role === 'user') currentUser.manager = newManager;
+
+  if (currentUser.role === 'user') {
+    currentUser.manager = newManager;
+  }
 
   const index = users.findIndex(u => u.login === currentUser.login);
   users[index] = currentUser;
-  localStorage.setItem('users', JSON.stringify(users));
 
+  // Если пользователь стал частью новой команды
+  if (newManager) {
+    const manager = users.find(u => u.login === newManager && u.role === 'manager');
+    if (manager && !manager.team.includes(currentUser.login)) {
+      manager.team.push(currentUser.login);
+    }
+  }
+
+  localStorage.setItem('users', JSON.stringify(users));
+  localStorage.setItem('currentUser', JSON.stringify(currentUser));
   alert('Данные обновлены!');
 }
 
@@ -105,6 +116,16 @@ function createTask(e) {
 
   tasks.push(task);
   localStorage.setItem('tasks', JSON.stringify(tasks));
+
+  // Добавляем уведомления
+  assignees.forEach(login => {
+    const user = users.find(u => u.login === login);
+    if (user) {
+      user.notifications.push(`Вам назначена задача: "${title}"`);
+    }
+  });
+
+  localStorage.setItem('users', JSON.stringify(users));
   alert('Задача назначена!');
 
   e.target.reset();
@@ -157,7 +178,7 @@ function renderUsersToAssignee() {
   const datalist = document.getElementById('users');
   datalist.innerHTML = '';
   users.forEach(user => {
-    if (user.role === 'user') return; // Руководители и админы могут быть исполнителями
+    if (user.role === 'user') return;
 
     const option = document.createElement('option');
     option.value = user.login;
@@ -169,18 +190,15 @@ function renderManagerTeam() {
   const list = document.getElementById('team-list');
   list.innerHTML = '';
 
-  const team = users
-    .filter(u => u.manager === currentUser.login)
-    .map(u => u.login);
-
-  if (team.length === 0) {
+  const manager = users.find(u => u.login === currentUser.login);
+  if (!manager.team || manager.team.length === 0) {
     const li = document.createElement('li');
-    li.textContent = 'У вас нет команды';
+    li.textContent = 'Нет сотрудников в команде';
     list.appendChild(li);
     return;
   }
 
-  team.forEach(login => {
+  manager.team.forEach(login => {
     const user = users.find(u => u.login === login);
     const li = document.createElement('li');
     li.textContent = `${user.name} — ${user.position}`;
@@ -191,17 +209,17 @@ function renderManagerTeam() {
 }
 
 function showUserTasks(login) {
-  const teamTasks = tasks.filter(task => task.to.includes(login));
   const container = document.getElementById('team-tasks');
-  container.innerHTML = `<h4>Задачи ${login}</h4>`;
+  container.innerHTML = `<h4>Задачи для ${login}</h4>`;
   const ul = document.createElement('ul');
 
-  if (teamTasks.length === 0) {
+  const userTasks = tasks.filter(task => task.to.includes(login));
+  if (userTasks.length === 0) {
     const li = document.createElement('li');
-    li.textContent = 'Нет задач для этого пользователя';
+    li.textContent = 'Нет задач';
     ul.appendChild(li);
   } else {
-    teamTasks.forEach(task => {
+    userTasks.forEach(task => {
       const li = document.createElement('li');
       li.innerHTML = `
         <strong>${task.title}</strong><br/>
@@ -236,18 +254,36 @@ function addUser(e) {
     return;
   }
 
-  users.push({ login, name, position, password, role, manager, notifications: [] });
+  const newUser = {
+    login,
+    name,
+    position,
+    password,
+    role,
+    manager: '',
+    notifications: []
+  };
+
+  if (role === 'user' && manager) {
+    newUser.manager = manager;
+    const managerUser = users.find(u => u.login === manager && u.role === 'manager');
+    if (managerUser) {
+      if (!managerUser.team) managerUser.team = [];
+      managerUser.team.push(newUser.login);
+    }
+  }
+
+  users.push(newUser);
   localStorage.setItem('users', JSON.stringify(users));
   alert('Пользователь добавлен!');
   e.target.reset();
-  renderUsersToAssignee();
   renderAllUsers();
+  renderUsersToAssignee();
 }
 
 function renderAllUsers() {
   const list = document.getElementById('user-list');
   list.innerHTML = '';
-
   users.forEach(user => {
     const li = document.createElement('li');
     li.innerHTML = `
@@ -265,7 +301,6 @@ function renderAllUsers() {
 function renderAllTasksForAdmin() {
   const list = document.getElementById('task-list');
   list.innerHTML = '';
-
   tasks.forEach(task => {
     const li = document.createElement('li');
     li.innerHTML = `
@@ -282,48 +317,51 @@ function renderAllTasksForAdmin() {
 function deleteTask(id) {
   tasks = tasks.filter(task => task.id !== id);
   localStorage.setItem('tasks', JSON.stringify(tasks));
-  renderAllTasksForAdmin();
   if (currentUser.role === 'manager') renderTasksForManagerTeam();
+  if (currentUser.role === 'admin') renderAllTasksForAdmin();
 }
 
 function renderTasksForManagerTeam() {
   const list = document.getElementById('team-tasks');
   list.innerHTML = '';
 
-  const team = users
-    .filter(u => u.manager === currentUser.login)
-    .map(u => u.login);
-
-  if (team.length === 0) {
+  const manager = users.find(u => u.login === currentUser.login);
+  if (!manager.team || manager.team.length === 0) {
     const li = document.createElement('li');
     li.textContent = 'Нет команды';
     list.appendChild(li);
     return;
   }
 
-  team.forEach(login => {
+  manager.team.forEach(login => {
+    const user = users.find(u => u.login === login);
     const userTasks = tasks.filter(task => task.to.includes(login));
-    if (userTasks.length === 0) return;
 
     const h5 = document.createElement('h5');
-    h5.textContent = `Задачи: ${login}`;
+    h5.textContent = `Задачи ${user.name}`;
     list.appendChild(h5);
 
     const ul = document.createElement('ul');
 
-    userTasks.forEach(task => {
+    if (userTasks.length === 0) {
       const li = document.createElement('li');
-      li.innerHTML = `
-        <strong>${task.title}</strong><br/>
-        Статус: ${task.status}
-        <select onchange="updateTaskStatus(${task.id}, this.value)">
-          <option value="ожидает" ${task.status === 'ожидает' ? 'selected' : ''}>Ожидает</option>
-          <option value="в работе" ${task.status === 'в работе' ? 'selected' : ''}>В работе</option>
-          <option value="выполнено" ${task.status === 'выполнено' ? 'selected' : ''}>Выполнено</option>
-        </select>
-      `;
+      li.textContent = 'Нет задач';
       ul.appendChild(li);
-    });
+    } else {
+      userTasks.forEach(task => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <strong>${task.title}</strong><br/>
+          Статус: 
+          <select onchange="updateTaskStatus(${task.id}, this.value)">
+            <option value="ожидает" ${task.status === 'ожидает' ? 'selected' : ''}>Ожидает</option>
+            <option value="в работе" ${task.status === 'в работе' ? 'selected' : ''}>В работе</option>
+            <option value="выполнено" ${task.status === 'выполнено' ? 'selected' : ''}>Выполнено</option>
+          </select>
+        `;
+        ul.appendChild(li);
+      });
+    }
 
     list.appendChild(ul);
   });
@@ -345,5 +383,19 @@ function renderNotifications() {
     const li = document.createElement('li');
     li.textContent = msg;
     list.appendChild(li);
+  });
+}
+
+function toggleManagerField(role) {
+  const select = document.getElementById('user-manager');
+  select.classList.toggle('hidden', role !== 'user');
+
+  select.innerHTML = '';
+  const managers = users.filter(u => u.role === 'manager');
+  managers.forEach(manager => {
+    const option = document.createElement('option');
+    option.value = manager.login;
+    option.text = manager.name;
+    select.appendChild(option);
   });
 }
