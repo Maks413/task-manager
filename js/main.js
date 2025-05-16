@@ -1,7 +1,7 @@
 let users = JSON.parse(localStorage.getItem('users')) || [
   { login: 'admin', name: 'Админ Иванов', position: 'Администратор', password: 'admin', role: 'admin' },
-  { login: 'ivan', name: 'Иван Петров', position: 'Фронтенд разработчик', password: '123', role: 'user' },
-  { login: 'maria', name: 'Мария Смирнова', position: 'UI/UX дизайнер', password: '456', role: 'manager' }
+  { login: 'ivan', name: 'Иван Петров', position: 'Фронтенд разработчик', password: '123', role: 'user', manager: 'maria' },
+  { login: 'maria', name: 'Мария Смирнова', position: 'UI/UX дизайнер', password: '456', role: 'manager', team: ['ivan'] }
 ];
 
 let tasks = JSON.parse(localStorage.getItem('tasks')) || [
@@ -24,6 +24,7 @@ window.onload = () => {
     document.getElementById('new-password').value = currentUser.password;
     document.getElementById('new-position').value = currentUser.position;
 
+    // Общие настройки для роли
     if (['manager', 'admin'].includes(currentUser.role)) {
       document.getElementById('add-task').classList.remove('hidden');
     }
@@ -35,8 +36,9 @@ window.onload = () => {
     }
 
     if (currentUser.role === 'manager') {
-      document.getElementById('manager-tasks').classList.remove('hidden');
-      renderAllTasksForManager();
+      document.getElementById('manager-team').classList.remove('hidden');
+      renderManagerTeam();
+      renderTasksForManagerTeam();
     }
 
     renderUserTasks();
@@ -102,8 +104,11 @@ function createTask(e) {
   tasks.push(task);
   localStorage.setItem('tasks', JSON.stringify(tasks));
   alert('Задача назначена!');
+
   e.target.reset();
-  renderAllTasksForManager(); // Обновляем список задач
+  if (currentUser.role === 'manager') {
+    renderTasksForManagerTeam();
+  }
 }
 
 function renderUserTasks() {
@@ -142,35 +147,42 @@ function updateTaskStatus(taskId, newStatus) {
     task.status = newStatus;
     localStorage.setItem('tasks', JSON.stringify(tasks));
     renderUserTasks();
-    if (currentUser.role === 'manager') renderAllTasksForManager();
+    if (currentUser.role === 'manager') renderTasksForManagerTeam();
     if (currentUser.role === 'admin') renderAllTasksForAdmin();
   }
 }
 
-function renderAllTasksForAdmin() {
-  const list = document.getElementById('task-list');
+function renderManagerTeam() {
+  const list = document.getElementById('team-list');
   list.innerHTML = '';
-  tasks.forEach(task => {
+  const team = users
+    .filter(u => u.manager === currentUser.login)
+    .map(u => u.login);
+
+  if (team.length === 0) {
     const li = document.createElement('li');
-    li.innerHTML = `
-      <strong>${task.title}</strong><br/>
-      От: ${task.from}<br/>
-      Кому: ${task.to.join(', ')}<br/>
-      Срок: ${task.deadline}<br/>
-      Статус: ${task.status}
-    `;
+    li.textContent = 'У вас нет команды';
+    list.appendChild(li);
+    return;
+  }
+
+  team.forEach(login => {
+    const user = users.find(u => u.login === login);
+    const li = document.createElement('li');
+    li.textContent = `${user.name} — ${user.position}`;
     list.appendChild(li);
   });
 }
 
-function renderAllTasksForManager() {
+function renderTasksForManagerTeam() {
   const list = document.getElementById('all-tasks');
   list.innerHTML = '';
-  const managerUsers = users
-    .filter(u => u.role === 'user')
+
+  const team = users
+    .filter(u => u.manager === currentUser.login)
     .map(u => u.login);
 
-  const teamTasks = tasks.filter(task => task.to.some(login => managerUsers.includes(login)));
+  const teamTasks = tasks.filter(task => task.to.some(login => team.includes(login)));
 
   if (teamTasks.length === 0) {
     const li = document.createElement('li');
@@ -183,7 +195,6 @@ function renderAllTasksForManager() {
     const li = document.createElement('li');
     li.innerHTML = `
       <strong>${task.title}</strong><br/>
-      От: ${task.from}<br/>
       Кому: ${task.to.join(', ')}<br/>
       Срок: ${task.deadline}<br/>
       Статус: 
@@ -204,29 +215,20 @@ function addUser(e) {
   const position = document.getElementById('user-position').value.trim();
   const password = document.getElementById('user-password').value.trim();
   const role = document.getElementById('user-role').value;
+  const manager = document.getElementById('user-manager').value;
 
   if (users.some(u => u.login === login)) {
     alert('Пользователь с таким логином уже существует');
     return;
   }
 
-  users.push({ login, name, position, password, role });
+  users.push({ login, name, position, password, role, manager });
+
   localStorage.setItem('users', JSON.stringify(users));
   alert('Пользователь добавлен!');
-  renderUsersToAssignee();
+  e.target.reset();
   renderAllUsers();
-}
-
-function renderUsersToAssignee() {
-  const datalist = document.getElementById('users');
-  datalist.innerHTML = '';
-  users.forEach(user => {
-    if (user.role !== 'admin' && user.role !== 'manager') return;
-
-    const option = document.createElement('option');
-    option.value = user.login;
-    datalist.appendChild(option);
-  });
+  renderUsersToAssignee();
 }
 
 function renderAllUsers() {
@@ -239,37 +241,34 @@ function renderAllUsers() {
       Логин: ${user.login}<br/>
       Пароль: ${user.password}<br/>
       Должность: ${user.position}<br/>
-      Роль: ${user.role}
+      Роль: ${user.role}<br/>
+      Менеджер: ${user.manager || 'нет'}
     `;
     list.appendChild(li);
   });
 }
 
-function renderUserTasks() {
+function renderUsersToAssignee() {
+  const datalist = document.getElementById('users');
+  datalist.innerHTML = '';
+  users.forEach(user => {
+    const option = document.createElement('option');
+    option.value = user.login;
+    datalist.appendChild(option);
+  });
+}
+
+function renderAllTasksForAdmin() {
   const list = document.getElementById('task-list');
   list.innerHTML = '';
-
-  const filtered = tasks.filter(task => task.to.includes(currentUser.login));
-
-  if (filtered.length === 0) {
-    const li = document.createElement('li');
-    li.textContent = 'Нет активных задач';
-    list.appendChild(li);
-    return;
-  }
-
-  filtered.forEach(task => {
+  tasks.forEach(task => {
     const li = document.createElement('li');
     li.innerHTML = `
       <strong>${task.title}</strong><br/>
       От: ${task.from}<br/>
+      Кому: ${task.to.join(', ')}<br/>
       Срок: ${task.deadline}<br/>
       Статус: ${task.status}
-      <select onchange="updateTaskStatus(${task.id}, this.value)">
-        <option value="ожидает" ${task.status === 'ожидает' ? 'selected' : ''}>Ожидает</option>
-        <option value="в работе" ${task.status === 'в работе' ? 'selected' : ''}>В работе</option>
-        <option value="выполнено" ${task.status === 'выполнено' ? 'selected' : ''}>Выполнено</option>
-      </select>
     `;
     list.appendChild(li);
   });

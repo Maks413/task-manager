@@ -43,6 +43,12 @@
         <ul id="task-list"></ul>
       </section>
 
+      <!-- Команда руководителя -->
+      <section id="manager-team" class="panel-section hidden">
+        <h3>Моя команда</h3>
+        <ul id="team-list"></ul>
+      </section>
+
       <!-- Добавление задачи -->
       <section id="add-task" class="panel-section hidden">
         <h3>Добавить задачу</h3>
@@ -53,12 +59,6 @@
           <datalist id="users"></datalist>
           <button type="submit">Создать задачу</button>
         </form>
-      </section>
-
-      <!-- Задачи команды (для руководителя) -->
-      <section id="manager-tasks" class="panel-section hidden">
-        <h3>Задачи команды</h3>
-        <ul id="all-tasks"></ul>
       </section>
 
       <!-- Админка -->
@@ -73,6 +73,9 @@
             <option value="user">Работник</option>
             <option value="manager">Менеджер</option>
             <option value="admin">Администратор</option>
+          </select>
+          <select id="user-manager" multiple size="3">
+            <!-- Сюда добавятся менеджеры -->
           </select>
           <button type="submit">Добавить пользователя</button>
         </form>
