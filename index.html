@@ -1,23 +1,37 @@
 <!DOCTYPE html>
 <html lang="ru">
-  <head>
-    <meta charset="utf-8">
-    <title>Академия HTML</title>
-    <link rel="stylesheet" href="css/style.css">
-  </head>
-  <body>
+<head>
+  <meta charset="utf-8" />
+  <title>Академия HTML</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
 
-    <main>
-      <a href="https://htmlacademy.ru">
+  <main id="app">
+    <div id="login-form">
+      <h1>Вход</h1>
+      <form id="login" onsubmit="handleLogin(event)">
+        <input type="text" id="username" placeholder="Логин" required>
+        <input type="password" id="password" placeholder="Пароль" required>
+        <button type="submit">Войти</button>
+      </form>
+    </div>
+
+    <div id="task-manager" class="hidden">
+      <a href="https://htmlacademy.ru ">
         <img src="img/bane.svg" width="300" height="300" alt="HTML Academy">
       </a>
+      <h1>Здравствуйте!</h1>
+      
+      <form id="task-form" onsubmit="addTask(event)">
+        <input type="text" id="task-input" placeholder="Новая задача" />
+        <button type="submit">Добавить</button>
+      </form>
 
-      <h1>Академия HTML</h1>
+      <ul id="task-list"></ul>
+    </div>
+  </main>
 
-      <p>
-        <a href="https://github.com/htmlacademy/htmlacademy.github.io">github.com/htmlacademy/htmlacademy.github.io</a>
-      </p>
-    </main>
-
-  </body>
+  <script src="js/tasks.js"></script>
+</body>
 </html>
