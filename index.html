@@ -10,7 +10,7 @@
   <main id="app">
     <!-- Форма входа -->
     <div id="login-form">
-      <h1>Система управления проектами</h3>
+      <h1>Вход в систему</h1>
       <form onsubmit="handleLogin(event)">
         <input type="text" id="username" placeholder="Логин" required />
         <input type="password" id="password" placeholder="Пароль" required />
@@ -29,11 +29,10 @@
       <section id="profile" class="panel-section">
         <h3>Мой профиль</h3>
         <form onsubmit="updateProfile(event)">
-          <input type="text" id="new-name" placeholder="Имя и фамилия" required />
+          <input type="text" id="new-name" placeholder="Имя Отчество Фамилия" required />
           <input type="text" id="new-position" placeholder="Должность" required />
           <input type="text" id="new-login" placeholder="Новый логин" required />
           <input type="password" id="new-password" placeholder="Новый пароль" required />
-          <select id="user-manager" class="hidden"></select>
           <button type="submit">Сохранить изменения</button>
         </form>
       </section>
@@ -50,19 +49,7 @@
         <ul id="notification-list"></ul>
       </section>
 
-      <!-- Добавление задачи -->
-      <section id="add-task" class="panel-section hidden">
-        <h3>Добавить задачу</h3>
-        <form onsubmit="createTask(event)">
-          <input type="text" id="task-title" placeholder="Описание задачи" required />
-          <input type="text" id="assignee" placeholder="Кому (логины через запятую)" required />
-          <input type="date" id="deadline" required />
-          <datalist id="users"></datalist>
-          <button type="submit">Создать задачу</button>
-        </form>
-      </section>
-
-      <!-- Команда менеджера -->
+      <!-- Начальник: его сотрудники -->
       <section id="manager-team" class="panel-section hidden">
         <h3>Моя команда</h3>
         <ul id="team-list"></ul>
@@ -71,24 +58,25 @@
         <ul id="team-tasks"></ul>
       </section>
 
-      <!-- Панель админа -->
+      <!-- Админка -->
       <section id="admin-panel" class="panel-section hidden">
         <h3>Добавить нового пользователя</h3>
         <form onsubmit="addUser(event)">
           <input type="text" id="user-login" placeholder="Логин" required />
-          <input type="text" id="user-name" placeholder="Имя и фамилия" required />
+          <input type="text" id="user-name" placeholder="Имя Отчество Фамилия" required />
           <input type="text" id="user-position" placeholder="Должность" required />
           <input type="password" id="user-password" placeholder="Пароль" required />
-          <select id="user-role" onchange="toggleManagerField(this.value)">
-            <option value="user">Работник</option>
-            <option value="manager">Менеджер</option>
+          <select id="user-role">
+            <option value="">Выберите роль</option>
+            <option value="employee">Сотрудник</option>
+            <option value="chief">Начальник</option>
             <option value="admin">Администратор</option>
           </select>
-          <select id="user-manager" class="hidden"></select>
+          <select id="user-chief" class="hidden"></select>
           <button type="submit">Добавить пользователя</button>
         </form>
 
-        <h4 class="mt-6">Список пользователей</h4>
+        <h4 class="mt-6">Список всех пользователей</h4>
         <ul id="user-list"></ul>
       </section>
     </div>
