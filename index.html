@@ -67,7 +67,7 @@
           <input type="text" id="user-position" placeholder="Должность" required />
           <input type="password" id="user-password" placeholder="Пароль" required />
 
-          <select id="user-role" onchange="toggleChiefField(this.value)">
+          <select id="user-role" onchange="toggleChiefField(this.value)" required>
             <option value="">Выберите роль</option>
             <option value="employee">Сотрудник</option>
             <option value="chief">Начальник</option>
@@ -75,6 +75,7 @@
           </select>
 
           <select id="user-chief" class="hidden"></select>
+
           <button type="submit">Добавить пользователя</button>
         </form>
 
