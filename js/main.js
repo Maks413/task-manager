@@ -86,7 +86,7 @@ function updateProfile(e) {
   const index = users.findIndex(u => u.login === currentUser.login);
   users[index] = currentUser;
 
-  // Если пользователь стал частью новой команды
+  // Обновляем команду у менеджера, если есть
   if (newManager) {
     const manager = users.find(u => u.login === newManager && u.role === 'manager');
     if (manager && !manager.team.includes(currentUser.login)) {
@@ -117,7 +117,7 @@ function createTask(e) {
   tasks.push(task);
   localStorage.setItem('tasks', JSON.stringify(tasks));
 
-  // Добавляем уведомления
+  // Добавляем уведомления всем исполнителям
   assignees.forEach(login => {
     const user = users.find(u => u.login === login);
     if (user) {
@@ -127,8 +127,8 @@ function createTask(e) {
 
   localStorage.setItem('users', JSON.stringify(users));
   alert('Задача назначена!');
-
   e.target.reset();
+
   if (currentUser.role === 'manager') renderTasksForManagerTeam();
   if (currentUser.role === 'admin') renderAllTasksForAdmin();
 }
@@ -178,7 +178,7 @@ function renderUsersToAssignee() {
   const datalist = document.getElementById('users');
   datalist.innerHTML = '';
   users.forEach(user => {
-    if (user.role === 'user') return;
+    if (user.role !== 'admin' && user.role !== 'manager') return;
 
     const option = document.createElement('option');
     option.value = user.login;
@@ -223,8 +223,6 @@ function showUserTasks(login) {
       const li = document.createElement('li');
       li.innerHTML = `
         <strong>${task.title}</strong><br/>
-        Кому: ${task.to.join(', ')}<br/>
-        Срок: ${task.deadline}<br/>
         Статус: 
         <select onchange="updateTaskStatus(${task.id}, this.value)">
           <option value="ожидает" ${task.status === 'ожидает' ? 'selected' : ''}>Ожидает</option>
@@ -236,7 +234,6 @@ function showUserTasks(login) {
     });
   }
 
-  container.innerHTML = `<h4>Задачи ${login}</h4>`;
   container.appendChild(ul);
 }
 
@@ -352,7 +349,7 @@ function renderTasksForManagerTeam() {
         const li = document.createElement('li');
         li.innerHTML = `
           <strong>${task.title}</strong><br/>
-          Статус: 
+          Статус: ${task.status}
           <select onchange="updateTaskStatus(${task.id}, this.value)">
             <option value="ожидает" ${task.status === 'ожидает' ? 'selected' : ''}>Ожидает</option>
             <option value="в работе" ${task.status === 'в работе' ? 'selected' : ''}>В работе</option>
@@ -384,6 +381,9 @@ function renderNotifications() {
     li.textContent = msg;
     list.appendChild(li);
   });
+
+  user.notifications = []; // Очищаем уведомления после просмотра
+  localStorage.setItem('users', JSON.stringify(users));
 }
 
 function toggleManagerField(role) {
