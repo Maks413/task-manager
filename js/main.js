@@ -1,6 +1,6 @@
 let users = JSON.parse(localStorage.getItem('users')) || [
-  { login: 'admin', name: 'Администратор', password: 'admin', role: 'admin' },
-  { login: 'boss', name: 'Босс Боссов', password: 'boss', role: 'chief' },
+  { login: 'admin', name: 'Админ Иванов', password: 'admin', role: 'admin' },
+  { login: 'boss', name: 'Алексей Петров', password: 'boss', role: 'chief' },
   { login: 'ivan', name: 'Иван Иванов', password: '123', role: 'employee' }
 ];
 
@@ -79,23 +79,34 @@ function updateProfile(e) {
 }
 
 function addUser(e) {
-  e.preventDefault();
-  const login = document.getElementById('user-login').value.trim();
-  const name = document.getElementById('user-name').value.trim();
-  const position = document.getElementById('user-position').value.trim();
-  const password = document.getElementById('user-password').value.trim();
-  const role = document.getElementById('user-role').value.trim();
+  e.preventDefault(); // ❗ не даём форме перезагрузиться
 
+  const loginInput = document.getElementById('user-login');
+  const nameInput = document.getElementById('user-name');
+  const positionInput = document.getElementById('user-position');
+  const passwordInput = document.getElementById('user-password');
+  const roleSelect = document.getElementById('user-role');
+
+  // Получаем значения с проверкой на null/undefined
+  const login = loginInput ? loginInput.value.trim() : '';
+  const name = nameInput ? nameInput.value.trim() : '';
+  const position = positionInput ? positionInput.value.trim() : '';
+  const password = passwordInput ? passwordInput.value.trim() : '';
+  const role = roleSelect ? roleSelect.value.trim() : '';
+
+  // Проверяем, что все поля заполнены
   if (!login || !name || !password || !role) {
-    alert('Заполните все поля');
+    alert('Заполните все поля формы');
     return;
   }
 
+  // Проверяем, есть ли такой логин уже
   if (users.some(u => u.login === login)) {
     alert('Пользователь с таким логином уже существует');
     return;
   }
 
+  // Создаём нового пользователя
   const newUser = {
     login,
     name,
@@ -104,16 +115,23 @@ function addUser(e) {
     role
   };
 
+  // Добавляем в список
   users.push(newUser);
   localStorage.setItem('users', JSON.stringify(users));
 
+  // Очищаем форму
   e.target.reset();
-  alert('✅ Новый пользователь добавлен!');
+
+  // Обновляем список пользователей
   renderAllUsers();
+
+  alert('✅ Пользователь успешно зарегистрирован!');
 }
 
 function renderAllUsers() {
   const list = document.getElementById('user-list');
+  if (!list) return;
+
   list.innerHTML = '';
 
   users.forEach((user, index) => {
